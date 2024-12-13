@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,10 +8,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.serializers import UserRegistrationSerializer
 
-
 # Create your views here.
 
-class RegisterUserView(APIView):
+class RegisterUserView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = UserRegistrationSerializer
 
@@ -23,4 +23,8 @@ class RegisterUserView(APIView):
 
 class LoginUserView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
+
+
+class ProfileUserView(APIView):
+    pass
 
