@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'orders',
     'lessons',
     'courses',
+    'reviews',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
