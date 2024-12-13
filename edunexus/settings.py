@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'users',
+    'orders',
+    'lessons',
+    'courses',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
