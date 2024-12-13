@@ -14,4 +14,30 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def is_instructor(self):
+        return self.role == 'instructor'
+
+    @property
+    def is_student(self):
+        return self.role == 'student'
+
+
+class AccountBalance(models.Model):
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, related_name="balance")
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.user.username} Balance: ${self.balance}"
+
+    def add_balance(self, amount):
+        self.balance += amount
+        self.save()
+
+    def subtract_balance(self, amount):
+        if self.balance >= amount:
+            self.balance -= amount
+            self.save()
+        else:
+            raise ValueError("Insufficient balance")
 
