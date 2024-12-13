@@ -1,12 +1,16 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from users.serializers import UserRegistrationSerializer
+from users.serializers import UserRegistrationSerializer, UserProfileSerializer
+
 
 # Create your views here.
 
@@ -25,6 +29,11 @@ class LoginUserView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
 
-class ProfileUserView(APIView):
-    pass
+class ProfileUserView(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserProfileSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self):
+        return self.request.user
 
