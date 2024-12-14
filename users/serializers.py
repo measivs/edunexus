@@ -49,6 +49,5 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class VerifyEmailCodeSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
     code = serializers.CharField(max_length=6)
 
