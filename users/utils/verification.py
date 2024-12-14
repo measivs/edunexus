@@ -14,11 +14,3 @@ def generate_verification_code(user_id):
     cache.set(code_key, user_id, timeout=600)
 
     return code
-
-
-def fetch_verification_code(user_id):
-    """
-    Retrieve the verification code from the cache.
-    """
-    cache_key = f"verification_code_{user_id}"
-    return cache.get(cache_key)
