@@ -1,4 +1,7 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import CustomUser
 
 
@@ -28,8 +31,24 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return CustomUser.objects.create_user(**validated_data)
 
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        if not self.user.is_verified:
+            raise ValidationError("Your email is not verified.")
+
+        return data
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'bio', 'profile_picture']
         read_only_fields = ['username', 'email']
+
+
+class VerifyEmailCodeSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    code = serializers.CharField(max_length=6)
+
