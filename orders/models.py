@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 # Create your models here.
@@ -14,3 +15,15 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"
+
+    def clean(self):
+        """Check if the user has enough balance before saving."""
+        if self.user.balance.balance < self.price:
+            raise ValidationError("Insufficient balance to place this order.")
+
+    def save(self, *args, **kwargs):
+        """Override save to enforce balance deduction."""
+        self.clean()
+        if not self.pk:
+            self.user.balance.subtract_balance(self.price)
+        super().save(*args, **kwargs)
