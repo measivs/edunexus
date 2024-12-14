@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -10,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from users.models import CustomUser
 from users.serializers import UserRegistrationSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer, \
     VerifyEmailCodeSerializer
 from users.utils.email import send_verification_email, send_success_email
@@ -17,9 +17,6 @@ from users.utils.verification import generate_verification_code
 
 
 # Create your views here.
-
-User = get_user_model()
-
 
 class RegisterUserView(GenericAPIView):
     """
@@ -51,29 +48,39 @@ class VerifyEmailCodeView(GenericAPIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        user_id = request.data.get("user_id")
-        code = request.data.get("code")
-        cache_key = f"verification_code_{user_id}"
-        cached_code = cache.get(cache_key)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if not cached_code:
+        code = serializer.validated_data["code"]
+
+        code_key = f"user_id_for_code_{code}"
+        user_id = cache.get(code_key)
+
+        if not user_id:
             return Response({"error": "The verification code has expired or is invalid."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        if cached_code == code:
-            try:
-                user = User.objects.get(id=user_id)
-                user.is_verified = True
-                user.save()
-                send_success_email(user.email)
-            except User.DoesNotExist:
-                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-            cache.delete(cache_key)
-            return Response({"message": "Verification successful! Your email has been verified."},
-                            status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Incorrect verification code."}, status=status.HTTP_400_BAD_REQUEST)
+        cache_key = f"verification_code_{user.id}"
+        cached_code = cache.get(cache_key)
+
+        if not cached_code or cached_code != code:
+            return Response({"error": "The verification code has expired or is invalid."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user.is_verified = True
+        user.save()
+        send_success_email(user.email)
+
+        cache.delete(cache_key)
+        cache.delete(code_key)
+
+        return Response({"message": "Verification successful! Your email has been verified."},
+                        status=status.HTTP_200_OK)
 
 
 class LoginUserView(TokenObtainPairView):
