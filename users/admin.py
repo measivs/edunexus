@@ -3,10 +3,9 @@ from django.db.models import Model
 
 from .models import CustomUser, AccountBalance
 
-
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('username', 'is_verified')
 
 @admin.register(AccountBalance)
 class AccountBalanceAdmin(admin.ModelAdmin):
