@@ -59,3 +59,7 @@ class CourseSerializer(serializers.ModelSerializer):
             instance.tags.add(tag)
 
         return instance
+
+
+class EnrollmentSerializer(serializers.Serializer):
+    pass
