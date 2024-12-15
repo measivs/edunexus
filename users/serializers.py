@@ -51,3 +51,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class VerifyEmailCodeSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
 
+
+class AddBalanceSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Amount must be greater than zero.")
+        return value
+
