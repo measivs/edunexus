@@ -41,3 +41,4 @@ class CourseViewSet(ModelViewSet):
         Enrollment.objects.create(user=user, course=course)
 
         return Response({'status': 'user enrolled'}, status=status.HTTP_200_OK)
+
