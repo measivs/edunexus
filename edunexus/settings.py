@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'debug_toolbar',
     'drf_yasg',
+    'django_filters',
     'users',
     'orders',
     'lessons',
@@ -63,6 +64,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 
