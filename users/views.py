@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import CustomUser
 from users.serializers import UserRegistrationSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer, \
-    VerifyEmailCodeSerializer
+    VerifyEmailCodeSerializer, AddBalanceSerializer
 from users.utils.email import send_verification_email, send_success_email
 from users.utils.verification import generate_verification_code
 
@@ -95,3 +95,19 @@ class ProfileUserView(RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+
+class AddBalanceView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AddBalanceSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            amount = serializer.validated_data['amount']
+            user_balance = request.user.balance
+            user_balance.add_balance(amount)
+            return Response({
+                "message": "Balance added successfully!",
+                "current_balance": user_balance.balance
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
