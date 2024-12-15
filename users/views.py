@@ -110,3 +110,4 @@ class AddBalanceView(GenericAPIView):
                 "message": "Balance added successfully!",
                 "current_balance": user_balance.balance
             }, status=status.HTTP_200_OK)
+
