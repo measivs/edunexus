@@ -3,14 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.cache import cache
 from .models import Course, Enrollment
 from orders.models import Order
 from .permissions import IsInstructor
 from .serializers import CourseSerializer, EnrollmentSerializer
 from .filters import CourseFilter
 
-
-# views.py
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
@@ -45,8 +44,15 @@ class CourseViewSet(ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def list_enrollments(self, request):
         user = request.user
+        cache_key = f"user_enrollments_{user.id}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data is not None:
+            return Response(cached_data)
+
         enrollments = Enrollment.objects.filter(user=user)
         serializer = EnrollmentSerializer(enrollments, many=True)
+        cache.set(cache_key, serializer.data, timeout=60*15)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
@@ -57,3 +63,12 @@ class CourseViewSet(ModelViewSet):
 
         serializer = EnrollmentSerializer(enrollment)
         return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        cached_courses = cache.get('course_list')
+        if cached_courses is not None:
+            return Response(cached_courses)
+
+        response = super().list(request, *args, **kwargs)
+        cache.set('course_list', response.data, timeout=60*15)
+        return response
