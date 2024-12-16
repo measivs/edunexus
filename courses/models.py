@@ -1,31 +1,13 @@
 from django.db import models
 
-from users.models import CustomUser
-
 # Create your models here.
-
-class Category(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    description = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.CASCADE,
-        related_name='subcategories',
-        blank=True,
-        null=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     instructor = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name='courses')
-    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, related_name='courses')
-    tags = models.ManyToManyField('Tag', related_name='courses', blank=True)
+    category = models.ForeignKey('categories.Category', on_delete=models.SET_NULL, null=True, related_name='courses')
+    tags = models.ManyToManyField('categories.Tag', related_name='courses', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -39,7 +21,7 @@ class Course(models.Model):
 
 
 class Enrollment(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="enrollments")
+    user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name="enrollments")
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name="enrollments")
     enrolled_at = models.DateTimeField(auto_now_add=True)
     progress = models.FloatField(default=0.0)
@@ -52,9 +34,12 @@ class Enrollment(models.Model):
         return f"{self.user.username} enrolled in {self.course.title}"
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+class Lesson(models.Model):
+    title = models.CharField(max_length=255)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='lessons')
+    video = models.FileField(upload_to="lessons/videos/", blank=True, null=True)
+    content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return self.title
