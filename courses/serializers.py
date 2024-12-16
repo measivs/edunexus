@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Course, Category, Tag
+from .models import Course, Category, Tag, Enrollment
+
 
 class CategorySerializer(serializers.ModelSerializer):
     parent = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
@@ -61,5 +62,9 @@ class CourseSerializer(serializers.ModelSerializer):
         return instance
 
 
-class EnrollmentSerializer(serializers.Serializer):
-    pass
+class EnrollmentSerializer(serializers.ModelSerializer):
+    course = CourseSerializer()
+
+    class Meta:
+        model = Enrollment
+        fields = ['course', 'enrolled_at', 'progress', 'completed']
