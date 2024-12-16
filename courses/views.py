@@ -1,13 +1,15 @@
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.cache import cache
-from .models import Course, Enrollment
+
+from .models import Course, Enrollment, Lesson
 from orders.models import Order
 from .permissions import IsInstructor
-from .serializers import CourseSerializer, EnrollmentSerializer
+from .serializers import CourseSerializer, EnrollmentSerializer, LessonSerializer
 from .filters import CourseFilter
 
 class CourseViewSet(ModelViewSet):
@@ -72,3 +74,22 @@ class CourseViewSet(ModelViewSet):
         response = super().list(request, *args, **kwargs)
         cache.set('course_list', response.data, timeout=60*15)
         return response
+
+
+class LessonViewSet(ModelViewSet):
+    serializer_class = LessonSerializer
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsInstructor]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+    def get_queryset(self):
+        course_id = self.kwargs['course_pk']
+        return Lesson.objects.filter(course_id=course_id)
+
+    def perform_create(self, serializer):
+        course_id = self.kwargs['course_pk']
+        serializer.save(course_id=course_id)
