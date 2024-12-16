@@ -9,6 +9,8 @@ from .permissions import IsInstructor
 from .serializers import CourseSerializer, EnrollmentSerializer
 from .filters import CourseFilter
 
+
+# views.py
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
@@ -18,16 +20,14 @@ class CourseViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [permissions.IsAuthenticated, IsInstructor]
-        elif self.action == 'enroll':
+        elif self.action in ['enroll', 'list_enrollments', 'retrieve_enrollment']:
             self.permission_classes = [permissions.IsAuthenticated]
         else:
             self.permission_classes = [permissions.AllowAny]
         return super().get_permissions()
 
-    def get_serializer_context(self):
-        return {'request': self.request}
-
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated], serializer_class=EnrollmentSerializer)
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            serializer_class=EnrollmentSerializer)
     def enroll(self, request, pk=None):
         course = self.get_object()
         user = request.user
@@ -42,3 +42,18 @@ class CourseViewSet(ModelViewSet):
 
         return Response({'status': 'user enrolled'}, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def list_enrollments(self, request):
+        user = request.user
+        enrollments = Enrollment.objects.filter(user=user)
+        serializer = EnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def retrieve_enrollment(self, request, pk=None):
+        enrollment = Enrollment.objects.filter(user=request.user, course__pk=pk).first()
+        if not enrollment:
+            return Response({'detail': 'Enrollment not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = EnrollmentSerializer(enrollment)
+        return Response(serializer.data)
