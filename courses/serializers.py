@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from categories.models import Tag
 from .models import Course, Enrollment, Lesson
 from categories.serializers import CategorySerializer, TagSerializer
 
@@ -8,38 +7,39 @@ from categories.serializers import CategorySerializer, TagSerializer
 class CourseSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     tags = TagSerializer(many=True)
-    average_rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Course
-        fields = [
-            'title', 'description', 'category', 'tags',
-            'created_at', 'average_rating'
-        ]
+        fields = ['title', 'description', 'category', 'tags']
 
     def create(self, validated_data):
-        category = validated_data.pop('category')
-        tags = validated_data.pop('tags')
+        """
+        Override create method to handle category and tags properly.
+        """
+        category_data = validated_data.pop('category')
+        tags_data = validated_data.pop('tags')
         instructor = self.context['request'].user
-        course = Course.objects.create(instructor=instructor, category=category, **validated_data)
+        course = Course.objects.create(instructor=instructor, category=category_data, **validated_data)
 
-        for tag_data in tags:
-            tag, created = Tag.objects.get_or_create(name=tag_data['name'])
+        for tag in tags_data:
             course.tags.add(tag)
 
         return course
 
     def update(self, instance, validated_data):
-        category = validated_data.pop('category')
-        tags = validated_data.pop('tags')
+        """
+        Override update method to handle category and tags properly.
+        """
+        category_data = validated_data.pop('category')
+        tags_data = validated_data.pop('tags')
+
+        instance.category = category_data
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
-        instance.category = category
         instance.save()
 
         instance.tags.clear()
-        for tag_data in tags:
-            tag, created = Tag.objects.get_or_create(name=tag_data['name'])
+        for tag in tags_data:
             instance.tags.add(tag)
 
         return instance
@@ -54,6 +54,13 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    video = serializers.FileField(
+        allow_null=True,
+        required=False,
+        help_text="Upload a video file (e.g., MP4 format)"
+    )
+
     class Meta:
         model = Lesson
         fields = ['id', 'title', 'course', 'video', 'content', 'created_at']
+        read_only_fields = ['id', 'created_at']
