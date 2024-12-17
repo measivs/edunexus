@@ -1,4 +1,5 @@
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -78,6 +79,7 @@ class CourseViewSet(ModelViewSet):
 
 class LessonViewSet(ModelViewSet):
     serializer_class = LessonSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
