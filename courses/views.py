@@ -9,7 +9,7 @@ from django.core.cache import cache
 
 from .models import Course, Enrollment, Lesson
 from orders.models import Order
-from .permissions import IsInstructor
+from .permissions import IsInstructor, IsCourseOwner
 from .serializers import CourseSerializer, EnrollmentSerializer, LessonSerializer
 from .filters import CourseFilter
 
@@ -20,8 +20,10 @@ class CourseViewSet(ModelViewSet):
     filterset_class = CourseFilter
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create']:
             self.permission_classes = [permissions.IsAuthenticated, IsInstructor]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            self.permission_classes = [permissions.IsAuthenticated, IsInstructor, IsCourseOwner]
         elif self.action in ['enroll', 'list_enrollments', 'retrieve_enrollment']:
             self.permission_classes = [permissions.IsAuthenticated]
         else:
