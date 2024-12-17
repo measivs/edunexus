@@ -1,8 +1,7 @@
-# from rest_framework.routers import DefaultRouter
-# from .views import CategoryViewSet, TagViewSet
-#
-# router = DefaultRouter()
-# router.register(r'categories', CategoryViewSet, basename='category')
-# router.register(r'tags', TagViewSet, basename='tag')
-#
-# urlpatterns = router.urls
+from rest_framework.routers import DefaultRouter
+from categories.views import CategoryViewSet
+
+router = DefaultRouter()
+router.register('categories', CategoryViewSet, basename='category')
+
+urlpatterns = router.urls
