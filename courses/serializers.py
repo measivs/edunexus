@@ -1,47 +1,57 @@
 from rest_framework import serializers
-
+from categories.models import Category, Tag
 from .models import Course, Enrollment, Lesson
-from categories.serializers import CategorySerializer, TagSerializer
+from categories.serializers import TagSerializer
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    tags = TagSerializer(many=True)
+    category = serializers.CharField(
+        write_only=True,
+        help_text="Select an existing category (admins create categories).",
+    )
+    tags = TagSerializer(many=True, required=False)
 
     class Meta:
         model = Course
         fields = ['title', 'description', 'category', 'tags']
 
+    def validate_category(self, value):
+        try:
+            category = Category.objects.get(name=value)
+            return category
+        except Category.DoesNotExist:
+            raise serializers.ValidationError(f"Category '{value}' does not exist. Please select an existing category.")
+
     def create(self, validated_data):
-        """
-        Override create method to handle category and tags properly.
-        """
-        category_data = validated_data.pop('category')
-        tags_data = validated_data.pop('tags')
+        category_name = validated_data.pop('category')
+        tags_data = validated_data.pop('tags', [])
         instructor = self.context['request'].user
-        course = Course.objects.create(instructor=instructor, category=category_data, **validated_data)
-
-        for tag in tags_data:
-            course.tags.add(tag)
-
+        category = Category.objects.get(name=category_name)
+        course = Course.objects.create(instructor=instructor, category=category, **validated_data)
+        for tag_data in tags_data:
+            if isinstance(tag_data, Tag):
+                course.tags.add(tag_data)
+            elif isinstance(tag_data, dict) and 'name' in tag_data:
+                tag, _ = Tag.objects.get_or_create(name=tag_data['name'])
+                course.tags.add(tag)
         return course
 
     def update(self, instance, validated_data):
-        """
-        Override update method to handle category and tags properly.
-        """
-        category_data = validated_data.pop('category')
-        tags_data = validated_data.pop('tags')
-
-        instance.category = category_data
+        category_name = validated_data.pop('category', None)
+        tags_data = validated_data.pop('tags', [])
+        if category_name:
+            category = Category.objects.get(name=category_name)
+            instance.category = category
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.save()
-
         instance.tags.clear()
-        for tag in tags_data:
-            instance.tags.add(tag)
-
+        for tag_data in tags_data:
+            if isinstance(tag_data, Tag):
+                instance.tags.add(tag_data)
+            elif isinstance(tag_data, dict) and 'name' in tag_data:
+                tag, _ = Tag.objects.get_or_create(name=tag_data['name'])
+                instance.tags.add(tag)
         return instance
 
 
