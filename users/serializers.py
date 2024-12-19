@@ -52,6 +52,10 @@ class VerifyEmailCodeSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
 
 
+class BalanceSerializer(serializers.Serializer):
+    balance = serializers.FloatField()
+
+
 class AddBalanceSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
