@@ -1,22 +1,19 @@
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from users.models import CustomUser
-from users.serializers import UserRegistrationSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer, \
-    VerifyEmailCodeSerializer, AddBalanceSerializer, BalanceSerializer
-from users.utils.email import send_verification_email, send_success_email
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from users.utils.verification import generate_verification_code
 
+from users.serializers import UserRegistrationSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer, \
+    VerifyEmailCodeSerializer, AddBalanceSerializer, BalanceSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
+from users.utils.email import send_verification_email, send_success_email, send_password_reset_email, send_password_reset_success_email
 
-# Create your views here.
+User = get_user_model()
 
 class RegisterUserView(GenericAPIView):
     """
@@ -61,8 +58,8 @@ class VerifyEmailCodeView(GenericAPIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         cache_key = f"verification_code_{user.id}"
@@ -123,3 +120,48 @@ class AddBalanceView(GenericAPIView):
                 "current_balance": user_balance.balance
             }, status=status.HTTP_200_OK)
 
+
+class PasswordResetRequestView(GenericAPIView):
+    """
+    Handle password reset requests and send tokens via email.
+    """
+    serializer_class = PasswordResetRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+
+            send_password_reset_email(email, token)
+
+            return Response(
+                {
+                    "message": "Password reset email has been sent successfully. Check your inbox (or spam).",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetConfirmView(GenericAPIView):
+    """
+    Handle token verification and password update.
+    """
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            send_password_reset_success_email(email=user.email)
+
+            return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
