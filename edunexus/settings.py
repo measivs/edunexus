@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'drf_yasg',
     'django_filters',
+    'django_rest_passwordreset',
     'users',
     'orders',
     'categories',
