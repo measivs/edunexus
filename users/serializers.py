@@ -1,9 +1,12 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from .models import CustomUser
 
+User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
@@ -64,3 +67,41 @@ class AddBalanceSerializer(serializers.Serializer):
             raise serializers.ValidationError("Amount must be greater than zero.")
         return value
 
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, email):
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("There is no user registered with this email.")
+        return email
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        email = data['email']
+        token = data['token']
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"email": "Invalid email."})
+
+        token_generator = PasswordResetTokenGenerator()
+        if not token_generator.check_token(user, token):
+            raise serializers.ValidationError({"token": "Invalid or expired token."})
+
+        return data
+
+    def save(self):
+        email = self.validated_data['email']
+        password = self.validated_data['password']
+
+        user = User.objects.get(email=email)
+        user.set_password(password)
+        user.save()
+        return user
