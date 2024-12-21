@@ -1,6 +1,8 @@
+from django.db.models import Count
 from rest_framework.decorators import action
+from rest_framework.generics import GenericAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.viewsets import ModelViewSet
@@ -10,7 +12,7 @@ from django.core.cache import cache
 from .models import Course, Enrollment, Lesson
 from orders.models import Order
 from .permissions import IsInstructor, IsCourseOwner
-from .serializers import CourseSerializer, EnrollmentSerializer, LessonSerializer
+from .serializers import CourseSerializer, EnrollmentSerializer, LessonSerializer, PopularCourseSerializer
 from .filters import CourseFilter
 
 class CourseViewSet(ModelViewSet):
@@ -21,13 +23,13 @@ class CourseViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create']:
-            self.permission_classes = [permissions.IsAuthenticated, IsInstructor]
+            self.permission_classes = [IsAuthenticated, IsInstructor]
         elif self.action in ['update', 'partial_update', 'destroy']:
-            self.permission_classes = [permissions.IsAuthenticated, IsInstructor, IsCourseOwner]
+            self.permission_classes = [IsAuthenticated, IsInstructor, IsCourseOwner]
         elif self.action in ['enroll', 'list_enrollments', 'retrieve_enrollment']:
-            self.permission_classes = [permissions.IsAuthenticated]
+            self.permission_classes = [IsAuthenticated]
         else:
-            self.permission_classes = [permissions.AllowAny]
+            self.permission_classes = [AllowAny]
         return super().get_permissions()
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
@@ -97,3 +99,15 @@ class LessonViewSet(ModelViewSet):
     def perform_create(self, serializer):
         course_id = self.kwargs['course_pk']
         serializer.save(course_id=course_id)
+
+
+class PopularCoursesView(GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        popular_courses = Course.objects.annotate(
+            enrollment_count=Count('enrollments')
+        ).order_by('-enrollment_count')
+
+        serializer = PopularCourseSerializer(popular_courses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
