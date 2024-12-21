@@ -1,5 +1,9 @@
 from django.core.mail import send_mail
 
+from celery import shared_task
+
+from orders.models import Order
+
 
 def send_verification_email(email, code):
     """
