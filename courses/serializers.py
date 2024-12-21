@@ -81,3 +81,11 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = ['id', 'title', 'course', 'video', 'content', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class PopularCourseSerializer(serializers.ModelSerializer):
+    enrollment_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'description', 'instructor', 'price', 'category', 'enrollment_count']
