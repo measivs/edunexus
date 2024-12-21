@@ -7,6 +7,8 @@ from rest_framework import status
 from .permissions import IsCourseOwner
 from .serializers import OrderSerializer, CreateOrderSerializer, CouponCreateSerializer
 from .services.order_service import OrderService
+from .signals import order_success
+from .tasks import send_order_confirmation_email
 
 
 class OrderViewSet(ModelViewSet):
@@ -36,6 +38,9 @@ class OrderViewSet(ModelViewSet):
                 coupon_code=request.data.get("coupon_code"),
             )
             order = order_service.place_order()
+            order_success.send(sender=Order, user=request.user, course=order.course)
+
+            send_order_confirmation_email.delay(order.id, request.user.email)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
