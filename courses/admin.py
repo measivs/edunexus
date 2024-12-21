@@ -5,7 +5,7 @@ from courses.models import Course, Enrollment
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'title')
 
 
 @admin.register(Enrollment)
