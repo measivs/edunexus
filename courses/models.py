@@ -8,6 +8,7 @@ class Course(models.Model):
     instructor = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name='courses')
     category = models.ForeignKey('categories.Category', on_delete=models.SET_NULL, null=True, related_name='courses')
     tags = models.ManyToManyField('categories.Tag', related_name='courses', blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -18,6 +19,9 @@ class Course(models.Model):
         if reviews.exists():
             return reviews.aggregate(models.Avg('rating'))['rating__avg']
         return None
+
+    def is_owned_by(self, user):
+        return self.created_at == user
 
 
 class Enrollment(models.Model):
