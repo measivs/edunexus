@@ -59,6 +59,7 @@ class Coupon(models.Model):
                                           help_text="Minimum order amount required to use this coupon.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    notified = models.BooleanField(default=False, help_text="Set to True if expiry email was sent.")
 
     def is_valid(self):
         """Check if a coupon is active and not expired."""
