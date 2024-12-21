@@ -10,10 +10,15 @@ class CourseSerializer(serializers.ModelSerializer):
         help_text="Select an existing category (admins create categories).",
     )
     tags = TagSerializer(many=True, required=False)
+    price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True
+    )
 
     class Meta:
         model = Course
-        fields = ['title', 'description', 'category', 'tags']
+        fields = ['id', 'title', 'description', 'category', 'tags', 'price']
 
     def validate_category(self, value):
         try:
@@ -44,8 +49,10 @@ class CourseSerializer(serializers.ModelSerializer):
             instance.category = category
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
+        instance.price = validated_data.get('price', instance.price)
         instance.save()
         instance.tags.clear()
+
         for tag_data in tags_data:
             if isinstance(tag_data, Tag):
                 instance.tags.add(tag_data)
