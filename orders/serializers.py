@@ -4,6 +4,15 @@ from .models import Order, Coupon
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+        Serializer for retrieving order information.
+
+        Includes details like the user, course, coupon, order amount,
+        tax amount, and timestamps.
+
+        Read-only fields:
+            - User, course, coupon, amount, tax, created_at, and updated_at.
+    """
     user = serializers.StringRelatedField(read_only=True)
     course = serializers.StringRelatedField(read_only=True)
     coupon = serializers.StringRelatedField(read_only=True)
@@ -26,15 +35,19 @@ class OrderSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.Serializer):
     """
     Serializer for creating an order.
-    Accepts course_title instead of course_id.
+
+    Fields:
+        - `course_title` (required): The title of the course being purchased.
+        - `coupon_code` (optional): A discount code to apply to the order.
+
+    Validations:
+        - Ensures the provided course exists.
+        - Ensures the coupon is valid and active if provided.
     """
     course_title = serializers.CharField(required=True, help_text="Title of the course to order.")
     coupon_code = serializers.CharField(required=False, allow_blank=True, help_text="Optional discount code.")
 
     def validate_course_title(self, value):
-        """
-        Ensure the provided course title refers to an existing course.
-        """
         if not Course.objects.filter(title=value).exists():
             raise serializers.ValidationError("Invalid course title. The course does not exist.")
         return value
@@ -46,6 +59,20 @@ class CreateOrderSerializer(serializers.Serializer):
 
 
 class CouponCreateSerializer(serializers.ModelSerializer):
+    """
+        Serializer for creating and managing coupons.
+
+        Fields:
+            - `code`: Unique code for the coupon.
+            - `discount_percentage`: Discount percentage offered by the coupon.
+            - `valid_until`: The expiration date of the coupon.
+            - `is_active`: Indicates whether the coupon is active.
+            - `min_order_value`: The minimum order value required to apply the coupon.
+            - `courses`: The list of courses this coupon applies to (optional; default is global).
+        Validations:
+        - Ensures that the courses being linked to the coupon belong to the logged-in user.
+        - Ensures the discount percentage is between 1 and 100.
+    """
     courses = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Course.objects.all(),
@@ -61,9 +88,6 @@ class CouponCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """
-        Ensure that the courses belong to the logged-in instructor.
-        """
         user = self.context["request"].user
 
         courses = data.get("courses", [])
@@ -78,9 +102,6 @@ class CouponCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        """
-        Automatically set the creator field to the logged-in user.
-        """
         user = self.context["request"].user
         validated_data["creator"] = user
         courses = validated_data.pop("courses", [])
