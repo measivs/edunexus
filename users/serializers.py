@@ -9,6 +9,11 @@ from .models import CustomUser
 User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """
+        Serializer for registering new users.
+
+        Validates passwords and ensures that they match before creating the user account.
+    """
     confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -35,6 +40,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+        Customized serializer for obtaining JWT tokens.
+
+        Ensures that only verified users can log in and obtain tokens.
+    """
     def validate(self, attrs):
         data = super().validate(attrs)
 
@@ -45,6 +55,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    """
+        Serializer for viewing and updating user profiles.
+
+        Includes fields such as username, email, bio, and profile picture.
+    """
     class Meta:
         model = CustomUser
         fields = ['username', 'email', 'bio', 'profile_picture']
@@ -52,14 +67,29 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class VerifyEmailCodeSerializer(serializers.Serializer):
+    """
+        Serializer for verifying an email code.
+
+        Requires a 6-digit code to complete the email verification process.
+    """
     code = serializers.CharField(max_length=6)
 
 
 class BalanceSerializer(serializers.Serializer):
+    """
+        Serializer for displaying the user's current balance.
+
+        Provides the `balance` as a floating-point value.
+    """
     balance = serializers.FloatField()
 
 
 class AddBalanceSerializer(serializers.Serializer):
+    """
+        Serializer for adding funds to the user's account balance.
+
+        Validates that the amount to be added is positive.
+    """
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     def validate_amount(self, value):
@@ -69,6 +99,11 @@ class AddBalanceSerializer(serializers.Serializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+        Serializer for requesting a password reset.
+
+        Validates the provided email and ensures it belongs to an existing user.
+    """
     email = serializers.EmailField()
 
     def validate_email(self, email):
@@ -78,6 +113,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+        Serializer to validate and confirm the password reset process.
+
+        Verifies the token and updates the user's password upon successful validation.
+    """
     token = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
