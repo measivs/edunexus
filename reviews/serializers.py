@@ -5,6 +5,27 @@ from courses.models import Course
 from reviews.models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """
+        Serializer for course reviews.
+
+        Fields:
+            - `id` (read-only): The unique identifier for the review.
+            - `rating`: Numeric rating between 1 and 5.
+            - `comment`: A text comment provided by the user for the review.
+            - `user` (read-only): The username of the user who submitted the review.
+            - `course` (read-only): The primary key of the course the review is associated with.
+            - `created_at` (read-only): The timestamp when the review was created.
+
+        Validations:
+            - Rating must be a number between 1 and 5.
+            - Instructors cannot write reviews for their own courses.
+
+        Methods:
+            - `validate_rating`: Ensures the rating is between 1 and 5.
+            - `validate`: Validates that the reviewer is not the instructor of the course.
+            - `create`: Creates a new review while linking
+               it to the user and course based on the context.
+    """
     user = serializers.StringRelatedField(read_only=True)
     course = serializers.PrimaryKeyRelatedField(read_only=True)
 
