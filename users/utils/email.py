@@ -1,13 +1,13 @@
 from django.core.mail import send_mail
 
-from celery import shared_task
-
-from orders.models import Order
-
 
 def send_verification_email(email, code):
     """
-    Send the verification code to the user's email.
+    Send a verification email containing a 6-digit code.
+
+    Args:
+        email (str): The recipient's email address.
+        code (str): The 6-digit verification code.
     """
     subject = "Your Verification Code"
     message = f"Your verification code is {code}. It will expire in 10 minutes."
@@ -18,6 +18,12 @@ def send_verification_email(email, code):
 
 
 def send_success_email(email):
+    """
+        Send an email to notify the user that their email verification was successful.
+
+        Args:
+            email (str): The recipient's email address.
+    """
     subject = "Your Email is Verified!"
     message = "Thank you for verifying your email. You can now access your account."
     sender_email = "meako.sivsivadze@gmail.com"
@@ -28,9 +34,12 @@ def send_success_email(email):
 
 def send_password_reset_email(email, token):
     """
-    Sends a password reset email to the user.
-    """
+    Send an email containing a password reset token to the user.
 
+    Args:
+        email (str): The recipient's email address.
+        token (str): The password reset token.
+    """
     subject = 'Password Reset Request'
     message = (
         f"Hi,\n\n"
@@ -50,7 +59,10 @@ def send_password_reset_email(email, token):
 
 def send_password_reset_success_email(email):
     """
-    Sends an email to notify the user that their password was reset successfully.
+    Send an email notifying the user that their password has been successfully reset.
+
+    Args:
+        email (str): The recipient's email address.
     """
     subject = "Your Password Has Been Successfully Reset"
     message = (
