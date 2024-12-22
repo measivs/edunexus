@@ -5,6 +5,26 @@ from categories.serializers import TagSerializer
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """
+        Serializer for representing and managing course details.
+
+        Fields:
+            - `id`: Unique identifier of the course.
+            - `title`: Title of the course.
+            - `description`: Description of the course content.
+            - `category`: Category of the course (linked by name).
+            - `tags`: Tags associated with the course (optional).
+            - `price`: Price of the course (mandatory).
+
+        Validations:
+            - Ensures the provided category exists.
+            - Ensures unique tags are created or linked to the course.
+
+        Methods:
+            - `validate_category`: Validates and fetches categorized information by name.
+            - `create`: Creates a course with associated tags and instructor details.
+            - `update`: Updates course information and tags.
+    """
     category = serializers.CharField(
         write_only=True,
         help_text="Select an existing category (admins create categories).",
@@ -63,6 +83,15 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
+    """
+        Serializer for representing enrollment details.
+
+        Fields:
+            - `course`: Associated course (including nested details).
+            - `enrolled_at`: Timestamp of when the user enrolled.
+            - `progress`: Progress made by the user in the course.
+            - `completed`: Indicates if the course is completed.
+    """
     course = CourseSerializer()
 
     class Meta:
@@ -71,6 +100,20 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    """
+        Serializer for managing lesson details.
+
+        Fields:
+            - `id`: Unique identifier of the lesson.
+            - `title`: Title of the lesson.
+            - `course`: Course the lesson belongs to.
+            - `video`: Optional video file for the lesson.
+            - `content`: Text content of the lesson.
+            - `created_at`: Timestamp of when the lesson was created.
+
+        Read-only Fields:
+            - `id` and `created_at`.
+    """
     video = serializers.FileField(
         allow_null=True,
         required=False,
@@ -84,6 +127,18 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class PopularCourseSerializer(serializers.ModelSerializer):
+    """
+        Serializer for retrieving popular course details.
+
+        Fields:
+            - `id`: Unique identifier of the course.
+            - `title`: Title of the course.
+            - `description`: Description of the course.
+            - `instructor`: The instructor who created the course.
+            - `price`: Price of the course.
+            - `category`: Associated category of the course.
+            - `enrollment_count`: Number of enrollments in the course (read-only).
+    """
     enrollment_count = serializers.IntegerField(read_only=True)
 
     class Meta:
