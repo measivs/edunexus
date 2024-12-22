@@ -17,7 +17,16 @@ User = get_user_model()
 
 class RegisterUserView(GenericAPIView):
     """
-    Registers a user and sends a verification code via email.
+    A view for user registration.
+
+    Allows new users to register by providing necessary details
+    and stores their information in the database.
+
+    Permissions:
+        - Publicly accessible.
+
+    POST:
+        - Registers a new user.
     """
     permission_classes = (AllowAny,)
     serializer_class = UserRegistrationSerializer
@@ -39,7 +48,15 @@ class RegisterUserView(GenericAPIView):
 
 class VerifyEmailCodeView(GenericAPIView):
     """
-    Verifies the code sent to the user's email address.
+    A view for verifying email using a 6-digit verification code.
+
+    Validates the user's code sent via email and completes the verification process.
+
+    Permissions:
+        - Publicly accessible.
+
+    POST:
+        - Verifies the provided email code.
     """
     serializer_class = VerifyEmailCodeSerializer
     permission_classes = (AllowAny,)
@@ -81,10 +98,27 @@ class VerifyEmailCodeView(GenericAPIView):
 
 
 class LoginUserView(TokenObtainPairView):
+    """
+        A view for user login.
+
+        Allows authenticated users to log in using their credentials.
+
+        Permissions:
+            - Publicly accessible.
+        """
     serializer_class = CustomTokenObtainPairSerializer
 
 
 class ProfileUserView(RetrieveUpdateAPIView):
+    """
+        A view for retrieving and updating the user's profile information.
+
+        Permissions:
+            - Requires authentication.
+
+        GET:
+            - Returns the user's profile details.
+        """
     permission_classes = [IsAuthenticated]
     serializer_class = UserProfileSerializer
     parser_classes = [MultiPartParser, FormParser]
@@ -95,7 +129,13 @@ class ProfileUserView(RetrieveUpdateAPIView):
 
 class GetBalanceView(GenericAPIView):
     """
-    Endpoint for the user to view their balance.
+    A view to retrieve the current account balance of the authenticated user.
+
+    Permissions:
+        - Requires authentication.
+
+    GET:
+        - Returns the user's account balance.
     """
     permission_classes = [IsAuthenticated]
 
@@ -106,6 +146,15 @@ class GetBalanceView(GenericAPIView):
 
 
 class AddBalanceView(GenericAPIView):
+    """
+        A view to add funds to the user's account balance.
+
+        Permissions:
+            - Requires authentication.
+
+        POST:
+            - Allows adding a specified amount to the account balance.
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = AddBalanceSerializer
 
@@ -123,7 +172,15 @@ class AddBalanceView(GenericAPIView):
 
 class PasswordResetRequestView(GenericAPIView):
     """
-    Handle password reset requests and send tokens via email.
+    A view for requesting a password reset email.
+
+    Sends an email with a reset token to the user's registered email address.
+
+    Permissions:
+        - Publicly accessible.
+
+    POST:
+        - Sends a password reset email.
     """
     serializer_class = PasswordResetRequestSerializer
 
@@ -151,7 +208,15 @@ class PasswordResetRequestView(GenericAPIView):
 
 class PasswordResetConfirmView(GenericAPIView):
     """
-    Handle token verification and password update.
+    A view to confirm a password reset.
+
+    Verifies the token and updates the user's password.
+
+    Permissions:
+        - Publicly accessible.
+
+    POST:
+        - Resets the user's password if the token is valid.
     """
     serializer_class = PasswordResetConfirmSerializer
 
