@@ -3,7 +3,24 @@ from .models import Course
 
 
 class CourseFilter(django_filters.FilterSet):
-    title = django_filters.CharFilter(field_name='title', lookup_expr='icontains')  # Add this to filter by title
+    """
+        Custom filter for courses.
+
+        Features:
+            - Filters courses based on title, category, instructor, tags, and minimum rating.
+
+        Fields:
+            - `title`: Filters courses containing the title (case-insensitive).
+            - `category`: Filters courses based on their category name.
+            - `instructor`: Filters courses by the instructor's username.
+            - `tags`: Filters courses based on tags.
+            - `min_rating`: Filters courses with an average rating equal to or above the given value.
+
+        Methods:
+            - `filter_tags`: Filters courses that include specific tags.
+            - `filter_min_rating`: Filters courses based on a minimum average rating.
+    """
+    title = django_filters.CharFilter(field_name='title', lookup_expr='icontains')
     category = django_filters.CharFilter(field_name='category__name', lookup_expr='icontains')
     instructor = django_filters.CharFilter(field_name='instructor__username', lookup_expr='icontains')
     tags = django_filters.CharFilter(method='filter_tags')
@@ -11,7 +28,7 @@ class CourseFilter(django_filters.FilterSet):
 
     class Meta:
         model = Course
-        fields = ['title', 'category', 'instructor', 'tags', 'min_rating']  # Add `title` to the fields list
+        fields = ['title', 'category', 'instructor', 'tags', 'min_rating']
 
     def filter_tags(self, queryset, name, value):
         tag_names = value.split(',')
