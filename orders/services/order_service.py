@@ -6,6 +6,25 @@ from orders.models import Order, Coupon
 
 
 class OrderService:
+    """
+        A service for handling course orders.
+
+        Initialization Args:
+            - `user`: The user placing the order.
+            - `course_title`: The title of the course to be ordered.
+            - `coupon_code` (optional): Discount coupon code.
+
+        Features:
+            - Validates course eligibility.
+            - Validates optional coupon eligibility.
+            - Calculates the final price including discounts and taxes.
+            - Places an order and deducts the user's balance.
+
+        Methods:
+            - `validate_coupon`: Ensures the coupon is valid, active, and meets minimum thresholds.
+            - `calculate_price`: Calculates the final, tax, and total amounts for the course.
+            - `place_order`: Places the order while deducting the balance from the user.
+    """
     def __init__(self, user, course_title, coupon_code=None):
         self.user = user
         self.course = get_object_or_404(Course, title=course_title)
