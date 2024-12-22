@@ -12,7 +12,25 @@ from courses.serializers import CourseSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """
-    A ModelViewSet for managing categories.
+        A ModelViewSet for managing categories in the application.
+
+        Features:
+            - Supports all CRUD operations for categories (create, retrieve, update, delete).
+            - Allows users to filter and search categories by name.
+            - Provides a custom endpoint for fetching courses within a specific category.
+
+        Attributes:
+            - `queryset`: Queryset for retrieving all categories.
+            - `serializer_class`: Serializer class associated with categories.
+            - `filter_backends`: Backends used for filtering and searching.
+            - `search_fields`: Specifies fields to be searched (name).
+            - `filterset_fields`: Specifies fields to be used for filtering (name).
+
+        Methods:
+            - `get_permissions`: Dynamically determines permissions based on the action.
+            - Any user can list or retrieve categories and fetch their courses.
+            - Only admin users can create, update, or delete categories.
+            - `courses`: A custom action to fetch all courses that belong to a specific category.
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -27,9 +45,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='courses')
     def courses(self, request, pk=None):
-        """
-        Custom endpoint to fetch all courses related to a specific category.
-        """
         try:
             category = self.get_object()
         except Category.DoesNotExist:
