@@ -12,23 +12,36 @@ from .tasks import send_order_confirmation_email
 
 
 class OrderViewSet(ModelViewSet):
+    """
+        ViewSet for managing user orders.
+
+        Provides create, retrieve, update, and delete functionalities
+        for orders associated with the authenticated user.
+
+        Permissions:
+            - Requires authentication.
+
+        Actions:
+            - Uses `CreateOrderSerializer` when creating an order.
+            - Uses `OrderSerializer` for other actions.
+
+        - Filters orders to only include those created by the logged-in user.
+        - Automatically sends a confirmation email and signals order success on order creation.
+    """
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
 
     def get_serializer_class(self):
-        """
-        Use CreateOrderSerializer for the 'create' action, and
-        OrderSerializer for all other actions (e.g., list, retrieve, etc.).
-        """
         if self.action == 'create':
             return CreateOrderSerializer
         return OrderSerializer
 
     def get_queryset(self):
-        """
-        Limit orders to those created by the authenticated user.
-        """
-        return Order.objects.filter(user=self.request.user)
+        return Order.objects.filter(user=self.request.user).select_related(
+            'user',
+            'course',
+            'coupon'
+        )
 
     def create(self, request, *args, **kwargs):
         try:
@@ -50,14 +63,17 @@ class OrderViewSet(ModelViewSet):
 
 class CouponViewSet(ModelViewSet):
     """
-    Viewset for instructors to manage their coupons.
+    ViewSet for instructors to manage coupons.
+
+    Permissions:
+        - Requires authentication and checks for instructor ownership.
+
+    Actions:
+        - Allows instructors to create, retrieve, update, and delete coupons.
+        - Filters the queryset to include only the coupons created by the logged-in instructor.
     """
     permission_classes = [IsAuthenticated, IsCourseOwner]
     serializer_class = CouponCreateSerializer
 
     def get_queryset(self):
-        """
-        Restrict query to coupons created by the logged-in instructor.
-        """
-        return Coupon.objects.filter(creator=self.request.user)
-
+        return Coupon.objects.filter(creator=self.request.user).prefetch_related('courses')
