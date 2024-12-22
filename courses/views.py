@@ -10,12 +10,30 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.core.cache import cache
 
 from .models import Course, Enrollment, Lesson
-from orders.models import Order
 from .permissions import IsInstructor, IsCourseOwner
 from .serializers import CourseSerializer, EnrollmentSerializer, LessonSerializer, PopularCourseSerializer
 from .filters import CourseFilter
 
 class CourseViewSet(ModelViewSet):
+    """
+        ViewSet for managing courses.
+
+        Features:
+            - Handles CRUD operations for courses.
+            - Includes filtering, enrolling users, and listing course enrollments.
+
+        Methods:
+            - `get_permissions`: Determines permissions dynamically for different actions.
+            - `list_enrollments`: Lists enrollments of users in a course.
+            - `retrieve_enrollment`: Retrieves details of a specific enrollment.
+            - `list`: Lists available courses with optional filters.
+
+        Attributes:
+            - `queryset`: Default queryset for courses.
+            - `serializer_class`: Serializer class associated with courses.
+            - `filter_backends`: Backends to handle filtering mechanics.
+            - `filterset_class`: Filter set class for course filtering.
+    """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -31,22 +49,6 @@ class CourseViewSet(ModelViewSet):
         else:
             self.permission_classes = [AllowAny]
         return super().get_permissions()
-
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
-            serializer_class=EnrollmentSerializer)
-    def enroll(self, request, pk=None):
-        course = self.get_object()
-        user = request.user
-
-        if not Order.objects.filter(user=user, course=course, status='completed').exists():
-            return Response({'status': 'order not found or not completed'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if Enrollment.objects.filter(user=user, course=course).exists():
-            return Response({'status': 'already enrolled'}, status=status.HTTP_400_BAD_REQUEST)
-
-        Enrollment.objects.create(user=user, course=course)
-
-        return Response({'status': 'user enrolled'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def list_enrollments(self, request):
@@ -82,6 +84,22 @@ class CourseViewSet(ModelViewSet):
 
 
 class LessonViewSet(ModelViewSet):
+    """
+        ViewSet for managing lessons within courses.
+
+        Features:
+            - Handles CRUD operations for lessons.
+            - Supports file uploads for lessons (e.g., video files).
+
+        Methods:
+            - `get_permissions`: Determines permissions dynamically for different actions.
+            - `get_queryset`: Retrieves lessons related to a specific course.
+            - `perform_create`: Handles lesson creation, associating it with a course.
+
+        Attributes:
+            - `serializer_class`: Serializer class associated with lessons.
+            - `parser_classes`: Parsers supported for request data handling.
+    """
     serializer_class = LessonSerializer
     parser_classes = [MultiPartParser, FormParser]
 
@@ -102,6 +120,18 @@ class LessonViewSet(ModelViewSet):
 
 
 class PopularCoursesView(GenericAPIView):
+    """
+        View for retrieving a list of popular courses.
+
+        Features:
+            - Lists courses sorted by popularity (e.g., enrollment count).
+
+        Methods:
+            - `get`: Returns a query set of popular courses sorted by specified criteria.
+
+        Attributes:
+            - `permission_classes`: Permissions applied to accessing this view.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request):
