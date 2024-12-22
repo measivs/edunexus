@@ -9,6 +9,16 @@ from orders.models import Order, Coupon
 
 @shared_task
 def send_order_confirmation_email(order_id, user_email):
+    """
+        Task to send an order confirmation email to the user.
+
+        Args:
+            order_id (int): The ID of the placed order.
+            user_email (str): The email address of the user.
+
+        Returns:
+            str: Status message indicating success or failure.
+    """
     try:
         order = Order.objects.get(pk=order_id)
         send_mail(
@@ -26,7 +36,13 @@ def send_order_confirmation_email(order_id, user_email):
 @shared_task
 def send_coupon_expiry_notification(coupon_id):
     """
-    Task to send an email notification about a coupon that's about to expire.
+    Task to notify the creator of a coupon that's nearing its expiration.
+
+    Args:
+        coupon_id (int): The ID of the coupon to notify about.
+
+    Returns:
+        str: Status message indicating success or failure.
     """
     try:
         coupon = Coupon.objects.get(id=coupon_id)
@@ -54,7 +70,12 @@ def send_coupon_expiry_notification(coupon_id):
 @shared_task
 def scan_and_notify_expiring_coupons():
     """
-    Task to find and send notifications for coupons nearing their expiration date.
+    Task to identify and notify about coupons that are expiring soon.
+
+    Coupons that are within 2 days of expiration and still active are included in the notification process.
+
+    Returns:
+        str: Status message indicating the number of expiring coupons found and notified.
     """
     expiration_threshold = now() + timedelta(days=2)
 
@@ -69,4 +90,3 @@ def scan_and_notify_expiring_coupons():
         send_coupon_expiry_notification.delay(coupon.id)
 
     return f"Found and notified for {len(expiring_coupons)} expiring coupons."
-
