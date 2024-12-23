@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from celery import shared_task
@@ -24,7 +25,7 @@ def send_order_confirmation_email(order_id, user_email):
         send_mail(
             'Order Confirmation',
             f'Your order "{order.course.title}" was placed successfully!',
-            'meako.sivsivadze@gmail.com',
+            os.getenv('EMAIL_HOST_USER'),
             [user_email],
             fail_silently=False,
         )
@@ -52,7 +53,7 @@ def send_coupon_expiry_notification(coupon_id):
                 message=f"Hi {coupon.creator.username},\n\nYour coupon '{coupon.code}' "
                         f"will expire on {coupon.valid_until.strftime('%Y-%m-%d %H:%M:%S')}. "
                         "Make sure your users take advantage of it before time runs out!",
-                from_email='meako.sivsivadze@gmail.com',
+                from_email=os.getenv('EMAIL_HOST_USER'),
                 recipient_list=[coupon.creator.email],
                 fail_silently=False,
             )
