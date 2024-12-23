@@ -25,25 +25,6 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id} by {self.user.username} - {self.status}"
 
-    # def mark_completed(self):
-    #     """Mark the order as completed."""
-    #     self.status = 'completed'
-    #     self.save()
-    #
-    # def mark_failed(self):
-    #     """Mark the order as failed."""
-    #     self.status = 'failed'
-    #     self.save()
-    #
-    # def mark_cancelled(self):
-    #     """Mark the order as cancelled."""
-    #     self.status = 'cancelled'
-    #     self.save()
-    #
-    # @classmethod
-    # def user_has_ordered(cls, user, course):
-    #     return cls.objects.filter(user=user, course=course).exists()
-
 
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
