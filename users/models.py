@@ -42,13 +42,3 @@ class AccountBalance(models.Model):
             self.save()
         else:
             raise ValueError("Insufficient balance")
-
-    # def can_deduct(self, amount):
-    #     return self.balance >= amount
-    #
-    # def deduct_balance(self, amount):
-    #     if not self.can_deduct(amount):
-    #         raise ValueError("Insufficient balance")
-    #     self.balance -= amount
-    #     self.save()
-
