@@ -1,3 +1,5 @@
+import os
+
 from django.core.mail import send_mail
 
 
@@ -11,7 +13,7 @@ def send_verification_email(email, code):
     """
     subject = "Your Verification Code"
     message = f"Your verification code is {code}. It will expire in 10 minutes."
-    sender_email = "meako.sivsivadze@gmail.com"
+    sender_email = os.getenv('EMAIL_HOST_USER')
     recipient_email = [email]
 
     send_mail(subject, message, sender_email, recipient_email)
@@ -26,7 +28,7 @@ def send_success_email(email):
     """
     subject = "Your Email is Verified!"
     message = "Thank you for verifying your email. You can now access your account."
-    sender_email = "meako.sivsivadze@gmail.com"
+    sender_email = os.getenv('EMAIL_HOST_USER')
     recipient_list = [email]
 
     send_mail(subject, message, sender_email, recipient_list)
@@ -52,7 +54,7 @@ def send_password_reset_email(email, token):
     send_mail(
         subject=subject,
         message=message,
-        from_email="meako.sivsivadze@gmail.com",
+        from_email=os.getenv('EMAIL_HOST_USER'),
         recipient_list=[email],
     )
 
@@ -71,7 +73,7 @@ def send_password_reset_success_email(email):
         "If you did not request this change, please contact support immediately.\n\n"
         "Thank you,\nEduNexus"
     )
-    sender_email = "meako.sivsivadze@gmail.com"
+    sender_email = os.getenv('EMAIL_HOST_USER')
     recipient_list = [email]
 
     send_mail(subject, message, sender_email, recipient_list)
